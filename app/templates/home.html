@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Главная — Приемная комиссия{% endblock %}
+{% block content %}
+<section class="hero">
+  <h2>Главная страница</h2>
+  <p>Все семь таблиц базы доступны через веб-интерфейс. Для связанных полей используются выпадающие списки с понятными названиями.</p>
+</section>
+{% if db_ok %}<div class="ok">Соединение с PostgreSQL установлено.</div>{% endif %}
+<div class="cards">
+{% for key, cfg in tables.items() %}
+  <a class="card" href="/table/{{ key }}"><h3>{{ cfg.title }}</h3><div class="count">{{ stats.get(key, '—') }}</div><span>Открыть список →</span></a>
+{% endfor %}
+</div>
+{% endblock %}
