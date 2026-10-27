@@ -123,6 +123,20 @@ def fk_options():
     }
 
 
+def db_error_message(exc: Exception) -> str:
+    if isinstance(exc, psycopg2.errors.UniqueViolation):
+        return "Такая запись уже существует. Проверьте уникальные поля."
+    if isinstance(exc, psycopg2.errors.ForeignKeyViolation):
+        return "Операция невозможна: запись связана с другими данными или выбрано несуществующее значение."
+    if isinstance(exc, psycopg2.errors.CheckViolation):
+        return "Данные не соответствуют ограничениям базы данных. Проверьте введенные значения."
+    if isinstance(exc, psycopg2.errors.NotNullViolation):
+        return "Не заполнено обязательное поле."
+    if isinstance(exc, ValueError):
+        return str(exc)
+    return "База данных отклонила операцию. Проверьте введенные данные."
+
+
 def normalize_value(field_type: str, value: str):
     if value == "":
         return None
@@ -153,7 +167,7 @@ def home(request: Request):
     except Exception as exc:
         stats = {}
         db_ok = False
-        error = str(exc)
+        error = db_error_message(exc)
     return templates.TemplateResponse(request, "home.html", {"tables": TABLES, "stats": stats, "db_ok": db_ok, "error": error})
 
 
@@ -165,7 +179,7 @@ def list_table(request: Request, table: str):
     try:
         rows = run_query(LIST_SQL[table])
     except Exception as exc:
-        rows, error = [], str(exc)
+        rows, error = [], db_error_message(exc)
     return templates.TemplateResponse(request, "list.html", {"table": table, "cfg": TABLES[table], "rows": rows, "error": error, "key_path": key_path})
 
 
@@ -197,7 +211,7 @@ def add_record(request: Request, table: str,
         run_query(f"INSERT INTO {table} ({', '.join(fields)}) VALUES ({', '.join(placeholders)})", tuple(values), fetch=False)
         return RedirectResponse(f"/table/{table}", status_code=303)
     except Exception as exc:
-        return templates.TemplateResponse(request, "form.html", {"table": table, "cfg": cfg, "record": incoming, "options": fk_options(), "statuses": STATUS_CHOICES, "mode": "add", "error": str(exc)}, status_code=400)
+        return templates.TemplateResponse(request, "form.html", {"table": table, "cfg": cfg, "record": incoming, "options": fk_options(), "statuses": STATUS_CHOICES, "mode": "add", "error": db_error_message(exc)}, status_code=400)
 
 
 @app.get("/table/{table}/edit/{key:path}", response_class=HTMLResponse)
@@ -247,7 +261,7 @@ def delete_record(table: str, key: str):
         return RedirectResponse(f"/table/{table}", status_code=303)
     except Exception as exc:
         from urllib.parse import quote
-        return RedirectResponse(f"/table/{table}?error={quote(str(exc))}", status_code=303)
+        return RedirectResponse(f"/table/{table}?error={quote(db_error_message(exc))}", status_code=303)
 
 
 @app.get("/reports", response_class=HTMLResponse)
@@ -257,5 +271,5 @@ def reports(request: Request):
         stats = run_query("SELECT * FROM v_direction_statistics ORDER BY code")
         error = None
     except Exception as exc:
-        rating, stats, error = [], [], str(exc)
+        rating, stats, error = [], [], db_error_message(exc)
     return templates.TemplateResponse(request, "reports.html", {"rating": rating, "stats": stats, "error": error})
