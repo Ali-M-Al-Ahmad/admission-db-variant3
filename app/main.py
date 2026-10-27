@@ -154,7 +154,7 @@ def home(request: Request):
         stats = {}
         db_ok = False
         error = str(exc)
-    return templates.TemplateResponse("home.html", {"request": request, "tables": TABLES, "stats": stats, "db_ok": db_ok, "error": error})
+    return templates.TemplateResponse(request, "home.html", {"tables": TABLES, "stats": stats, "db_ok": db_ok, "error": error})
 
 
 @app.get("/table/{table}", response_class=HTMLResponse)
@@ -166,14 +166,14 @@ def list_table(request: Request, table: str):
         rows = run_query(LIST_SQL[table])
     except Exception as exc:
         rows, error = [], str(exc)
-    return templates.TemplateResponse("list.html", {"request": request, "table": table, "cfg": TABLES[table], "rows": rows, "error": error, "key_path": key_path})
+    return templates.TemplateResponse(request, "list.html", {"table": table, "cfg": TABLES[table], "rows": rows, "error": error, "key_path": key_path})
 
 
 @app.get("/table/{table}/add", response_class=HTMLResponse)
 def add_form(request: Request, table: str):
     if table not in TABLES:
         return HTMLResponse("Неизвестная таблица", status_code=404)
-    return templates.TemplateResponse("form.html", {"request": request, "table": table, "cfg": TABLES[table], "record": {}, "options": fk_options(), "statuses": STATUS_CHOICES, "mode": "add", "error": None})
+    return templates.TemplateResponse(request, "form.html", {"table": table, "cfg": TABLES[table], "record": {}, "options": fk_options(), "statuses": STATUS_CHOICES, "mode": "add", "error": None})
 
 
 @app.post("/table/{table}/add")
@@ -197,7 +197,7 @@ def add_record(request: Request, table: str,
         run_query(f"INSERT INTO {table} ({', '.join(fields)}) VALUES ({', '.join(placeholders)})", tuple(values), fetch=False)
         return RedirectResponse(f"/table/{table}", status_code=303)
     except Exception as exc:
-        return templates.TemplateResponse("form.html", {"request": request, "table": table, "cfg": cfg, "record": incoming, "options": fk_options(), "statuses": STATUS_CHOICES, "mode": "add", "error": str(exc)}, status_code=400)
+        return templates.TemplateResponse(request, "form.html", {"table": table, "cfg": cfg, "record": incoming, "options": fk_options(), "statuses": STATUS_CHOICES, "mode": "add", "error": str(exc)}, status_code=400)
 
 
 @app.get("/table/{table}/edit/{key:path}", response_class=HTMLResponse)
@@ -208,7 +208,7 @@ def edit_form(request: Request, table: str, key: str):
     record = get_record(table, keys)
     if not record:
         return HTMLResponse("Запись не найдена", status_code=404)
-    return templates.TemplateResponse("form.html", {"request": request, "table": table, "cfg": TABLES[table], "record": record, "options": fk_options(), "statuses": STATUS_CHOICES, "mode": "edit", "error": None, "key": key})
+    return templates.TemplateResponse(request, "form.html", {"table": table, "cfg": TABLES[table], "record": record, "options": fk_options(), "statuses": STATUS_CHOICES, "mode": "edit", "error": None, "key": key})
 
 
 @app.post("/table/{table}/edit/{key:path}")
@@ -233,7 +233,7 @@ def edit_record(request: Request, table: str, key: str,
         run_query(f"UPDATE {table} SET {', '.join(sets)} WHERE {where}", tuple(values), fetch=False)
         return RedirectResponse(f"/table/{table}", status_code=303)
     except Exception as exc:
-        return templates.TemplateResponse("form.html", {"request": request, "table": table, "cfg": cfg, "record": incoming, "options": fk_options(), "statuses": STATUS_CHOICES, "mode": "edit", "error": str(exc), "key": key}, status_code=400)
+        return templates.TemplateResponse(request, "form.html", {"table": table, "cfg": cfg, "record": incoming, "options": fk_options(), "statuses": STATUS_CHOICES, "mode": "edit", "error": str(exc), "key": key}, status_code=400)
 
 
 @app.post("/table/{table}/delete/{key:path}")
@@ -258,4 +258,4 @@ def reports(request: Request):
         error = None
     except Exception as exc:
         rating, stats, error = [], [], str(exc)
-    return templates.TemplateResponse("reports.html", {"request": request, "rating": rating, "stats": stats, "error": error})
+    return templates.TemplateResponse(request, "reports.html", {"rating": rating, "stats": stats, "error": error})
