@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Добавить' if mode=='add' else 'Изменить' }} — {{ cfg.title }}{% endblock %}
+{% block content %}
+<h2>{{ 'Добавление' if mode=='add' else 'Редактирование' }}: {{ cfg.title }}</h2>
+<form class="edit-form" method="post">
+{% for name,label,ftype,required in cfg.fields %}
+  <label><span>{{ label }}{% if required %} *{% endif %}</span>
+  {% if ftype.startswith('fk_') %}
+    <select name="{{ name }}" {% if required %}required{% endif %}><option value="">— выберите —</option>{% for item in options[ftype] %}<option value="{{ item.value }}" {% if record.get(name)|string == item.value|string %}selected{% endif %}>{{ item.label }}</option>{% endfor %}</select>
+  {% elif ftype == 'status' %}
+    <select name="{{ name }}" required>{% for s in statuses %}<option value="{{ s }}" {% if record.get(name)==s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select>
+  {% else %}
+    <input type="{{ ftype }}" name="{{ name }}" value="{{ record.get(name,'') }}" {% if required %}required{% endif %}>
+  {% endif %}
+  </label>
+{% endfor %}
+<div class="form-actions"><button class="button" type="submit">Сохранить</button><a class="button secondary" href="/table/{{ table }}">Отмена</a></div>
+</form>
+{% endblock %}
