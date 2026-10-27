@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Приемная комиссия{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+</head>
+<body>
+<header>
+  <div class="wrap header-row">
+    <div>
+      <h1>Автоматизация учета поступления абитуриентов</h1>
+      <p>PostgreSQL + FastAPI</p>
+    </div>
+    <nav><a href="/">Главная</a><a href="/reports">Отчеты</a></nav>
+  </div>
+</header>
+<main class="wrap">
+  {% if error %}<div class="error"><strong>Ошибка базы данных:</strong> {{ error }}</div>{% endif %}
+  {% block content %}{% endblock %}
+</main>
+<footer><div class="wrap">Базы данных · вариант 3 · ЛБ-10</div></footer>
+</body>
+</html>
